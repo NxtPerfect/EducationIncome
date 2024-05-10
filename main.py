@@ -13,8 +13,11 @@ def loadCSV(path: str):
 
 def loadCSVDebug(path: str):
     dtypes = {
-        "Education level": str,  # Assuming education level is categorical
-        "Both Sexes": float  # Assuming average wages are floats
+        "Education level": str,
+        "Type of work": str,
+        "Wages": str,
+        "Age group": str,
+        "Both Sexes": float
     }
     data = pd.read_csv(path, dtype=dtypes)
     showPlotDebug(data)
@@ -31,8 +34,31 @@ def showPlotDebug(data):
     plt.figure(figsize=(10,6))
     # Sort results by biggest
     data = data[data["Education level"] != "Total, all education levels"]
+
+    ignore = ["Full-time", "Part-time"]
+    for i in ignore:
+        data = data[data["Type of work"] != i]
+    print(data)
+
+    # Ignore generalized results
+    ignore = ["PSE  (5,6,7,8,9))", "No PSE  (0,1,2,3,4)"]
+    for i in ignore:
+        data = data[data["Education level"] != i]
+    print(data)
+
+    # Ignore averages and medians
+    ignore = ["Average hourly wage rate", "Average weekly wage rate", "Median hourly wage rate", "Median weekly wage rate"]
+    print(data)
+    for i in ignore:
+        data = data[data["Wages"] != i]
+
+    # Ignore generalized age groups
+    ignore = ["15 years and over", "25 years and over", "55 years and over"]
+    for i in ignore:
+        data = data[data["Age group"] != i]
+    print(data)
     plt.title("Education level vs Income")
-    data = data.groupby("Education level", as_index=False)['Both Sexes'].mean().reset_index()
+    data = data.groupby("Education level", as_index=False)['Both Sexes'].median().reset_index()
     data = data.sort_values(by=["Both Sexes"], ascending=False)
     # If i sum up the elements before the plot, it should be faster
 
