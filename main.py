@@ -1,91 +1,51 @@
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from multiprocessing import Process
+import streamlit as st
 from time import perf_counter
-from collections import defaultdict
 
-DATA = "./data/incom vs education.csv"
+DATA = "./data/heart_failure_clinical_records.csv"
 
 def loadCSV(path: str):
-    data = pd.read_csv(path)
-    showPlot(data)
+    df = pd.read_csv(path)
+    showPlot(df)
 
-def loadCSVDebug(path: str):
-    dtypes = {
-        "Education level": str,
-        "Type of work": str,
-        "Wages": str,
-        "Age group": str,
-        "Both Sexes": float
-    }
-    data = pd.read_csv(path, dtype=dtypes)
-    showPlotDebug(data)
+def showPlot(df: pd.DataFrame):
+    st.markdown("# Heart failure")
+    st.markdown("## Datasets")
+    # Og chart with no deaths
+    df_og = df.copy(deep=True)
+    df_og = df_og.drop(index=df_og[df_og["DEATH_EVENT"] == 0].index)
+    df_og = df_og.drop("DEATH_EVENT", axis=1)
+    df_og.sort_values(by="creatinine_phosphokinase")
+    st.markdown("### No deaths")
+    st.dataframe(df_og)
+    st.markdown("#### Median")
+    st.table(df_og.median())
+    # st.markdown("#### Mean")
+    # st.table(df_og.mean())
+    no_death_creatinine = df_og.median()["creatinine_phosphokinase"]
+    no_death_time = df_og.median()["time"]
+    st.bar_chart(df_og[["creatinine_phosphokinase"]])
 
-def showPlot(data):
-    plt.title("Testing")
-    print("Loading data...")
-    plt.bar(data["Education level"], data["Both Sexes"])
-    print("Finished loading.")
-    plt.xticks(rotation=45)
-    plt.show()
+    # Chart with only deaths
+    df = df.drop(index=df[df["DEATH_EVENT"] == 1].index)
+    df = df.drop("DEATH_EVENT", axis=1)
+    df.sort_values(by="creatinine_phosphokinase")
+    st.markdown("### Only deaths")
+    st.dataframe(df)
+    st.markdown("#### Median")
+    st.table(df.median())
+    # st.markdown("#### Mean")
+    # st.table(df.mean())
+    death_creatinine = df.median()["creatinine_phosphokinase"]
+    death_time = df.median()["time"]
+    st.bar_chart(df[["creatinine_phosphokinase"]])
 
-def showPlotDebug(data):
-    plt.figure(figsize=(10,6))
-    # Sort results by biggest
-    data = data[data["Education level"] != "Total, all education levels"]
-
-    ignore = ["Full-time", "Part-time"]
-    for i in ignore:
-        data = data[data["Type of work"] != i]
-    print(data)
-
-    # Ignore generalized results
-    ignore = ["PSE  (5,6,7,8,9))", "No PSE  (0,1,2,3,4)"]
-    for i in ignore:
-        data = data[data["Education level"] != i]
-    print(data)
-
-    # Ignore averages and medians
-    ignore = ["Average hourly wage rate", "Average weekly wage rate", "Median hourly wage rate", "Median weekly wage rate"]
-    print(data)
-    for i in ignore:
-        data = data[data["Wages"] != i]
-
-    # Ignore generalized age groups
-    ignore = ["15 years and over", "25 years and over", "55 years and over"]
-    for i in ignore:
-        data = data[data["Age group"] != i]
-    print(data)
-    plt.title("Education level vs Income")
-    data = data.groupby("Education level", as_index=False)['Both Sexes'].median().reset_index()
-    data = data.sort_values(by=["Both Sexes"], ascending=False)
-    # If i sum up the elements before the plot, it should be faster
-
-    print("Loading data...")
-    t1_start = perf_counter()
-    barlist = plt.bar(data["Education level"], data["Both Sexes"])
-
-    for i, item in enumerate(barlist):
-        if not i % 3:
-            item.set_color('b')
-            continue
-        if not i % 4:
-            item.set_color('g')
-            continue
-        if not i % 2:
-            item.set_color('r')
-            continue
-    t1_stop = perf_counter()
-    print(f'Finished loading in{(t1_stop-t1_start): .2f} seconds.')
-    plt.xticks(rotation=45)
-    plt.grid(axis="y")
-    plt.gcf().axes[0].yaxis.get_major_formatter().set_scientific(False)
-    plt.tight_layout()
-    plt.show()
+    st.markdown("## Results")
+    st.markdown(f'Percentage change of creatinine phosphokinase for alive vs dead patients is {no_death_creatinine} - {death_creatinine}=**{((no_death_creatinine - death_creatinine) / no_death_creatinine) * 100.0:.2f}%**. This means if your creatinine phosphokinase is around 230mcg/L, you might be at risk of heart failure. The time between follow up appointment for patients who died is {death_time} - {no_death_time}=**{((death_time - no_death_time) / death_time) * 100.0:.2f}%** higher, during which they were found dead.')
 
 if __name__ == "__main__":
     # process = Process(target=loadCSV, args=("./data/incom vs education.csv",))
     # process.start()
     # process.join()
-    loadCSVDebug(DATA)
+    loadCSV(DATA)
