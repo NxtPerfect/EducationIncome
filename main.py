@@ -89,7 +89,9 @@ def showPlots(df: pd.DataFrame):
     st.markdown("# Clustering")
     st.markdown("## Metoda łokci")
     plt.figure(figsize=(10, 6))
-    plt.plot(range(1, 21), wcss, marker='o', linestyle='-') # 8 clusters are at the elbow point
+
+    # Najlepszy wynik daje 5 klastrów
+    plt.plot(range(1, 21), wcss, marker='o', linestyle='-')
     plt.xlabel('Number of clusters')
     plt.ylabel('WCSS')
     plt.title('Metoda łokci')
