@@ -68,12 +68,18 @@ def showPlots(df: pd.DataFrame):
 
     # Histograms of each column
     for column in df.columns:
-        if column != 'DEATH_EVENT':
-            plt.figure(figsize=(10, 4))
-            sb.histplot(df[column], kde=True, bins=30)
-            plt.title(f'Distribution of {column}')
+        if column == 'DEATH_EVENT':
+            continue
+        plt.figure(figsize=(10, 4))
+        plt.title(f'Distribution of {column}')
+        if column in ['sex', 'anaemia', 'diabetes', 'high_blood_pressure', 'smoking']:
+            sb.countplot(data=df, x=column)
             st.pyplot(plt)
             plt.close()
+            continue
+        sb.histplot(df[column], kde=True, bins=30)
+        st.pyplot(plt)
+        plt.close()
     
     # Clustering data
     ## Elbow method
@@ -104,13 +110,6 @@ def showPlots(df: pd.DataFrame):
     cdf['cluster'] = kmeanModel.fit_predict(data_scaled)
     st.write("Cluster mean:")
     st.table(cdf.groupby("cluster", sort=True).mean())
-    
-    """
-    above aberage serum_creatinine
-    below average serum_sodium
-    below average time
-    below average platelets
-    """
     
     plt.figure(figsize=(10, 6))
     colors = mpl.colormaps['Paired'].resampled(5)
